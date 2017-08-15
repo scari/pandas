@@ -13,8 +13,9 @@ from pandas.core.groupby import (BinGrouper, Grouper, _GroupBy, GroupBy,
 from pandas.tseries.frequencies import to_offset, is_subperiod, is_superperiod
 from pandas.core.indexes.datetimes import DatetimeIndex, date_range
 from pandas.core.indexes.timedeltas import TimedeltaIndex
-from pandas.tseries.offsets import DateOffset, Tick, Day, _delta_to_nanoseconds
-from pandas.core.indexes.period import PeriodIndex
+from pandas.tseries.offsets import (DateOffset, Tick, Day, BusinessHour,
+                                    _delta_to_nanoseconds)
+from pandas.core.indexes.period import PeriodIndex, period_range
 import pandas.core.common as com
 import pandas.core.algorithms as algos
 from pandas.core.dtypes.generic import ABCDataFrame, ABCSeries
@@ -1314,8 +1315,13 @@ def _get_range_edges(first, last, offset, closed='left', base=0):
         if (is_day and day_nanos % offset.nanos == 0) or not is_day:
             return _adjust_dates_anchored(first, last, offset,
                                           closed=closed, base=base)
+    elif isinstance(offset, BusinessHour):
+        # GH12351 - normalize BH freq leads ValueError
+        first = offset.rollback(first)
+        last = offset.rollforward(last + offset)
+        return first, last
 
-    if not isinstance(offset, Tick):  # and first.time() != last.time():
+    else:  # and first.time() != last.time():
         # hack!
         first = first.normalize()
         last = last.normalize()
