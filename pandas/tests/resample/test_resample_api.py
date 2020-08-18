@@ -612,3 +612,20 @@ def test_resample_agg_readonly():
 
     result = rs.agg("min")
     tm.assert_series_equal(result, expected)
+
+
+def test_resample_business_hourly(self):
+    rng = pd.date_range(start='2020-05-18 00:00:00',
+                        end='2020-05-19 23:00:00',
+                        freq='H')
+    expected_rng = pd.date_range(start='2020-05-18 00:00:00',
+                                 end='2017-05-19 23:00:00',
+                                 freq='BH')
+
+    ts = Series(1, index=rng)
+    result = ts.asfreq('BH')
+    expected_ts = Series(1, index=expected_rng)
+
+    assert_series_equal(result, expected_ts)
+
+
