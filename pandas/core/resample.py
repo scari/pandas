@@ -35,7 +35,7 @@ from pandas.core.indexes.period import PeriodIndex, period_range
 from pandas.core.indexes.timedeltas import TimedeltaIndex, timedelta_range
 
 from pandas.tseries.frequencies import is_subperiod, is_superperiod
-from pandas.tseries.offsets import DateOffset, Day, Nano, Tick
+from pandas.tseries.offsets import DateOffset, Day, Nano, Tick, BusinessHour
 
 _shared_docs_kwargs: Dict[str, str] = dict()
 
@@ -1724,6 +1724,10 @@ def _get_timestamp_range_edges(
         if isinstance(freq, Day):
             first = first.tz_localize(index_tz)
             last = last.tz_localize(index_tz)
+    # GH12351
+    elif issubclass(type(offset), BusinessHour):
+        first = offset.rollback(first)
+        last = offset.rollforward(last + offset)
     else:
         first = first.normalize()
         last = last.normalize()
